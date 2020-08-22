@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "c:\\a\\a\\env\\wtagger\\Scripts\\python.exe",
+    "python.formatting.provider": "black"
+}
