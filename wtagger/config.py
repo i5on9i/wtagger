@@ -54,9 +54,11 @@ class DefaultConfig(BaseConfig):
 
 
 class TestConfig(BaseConfig):
+    TEST_DB = 'test.db'
+
     TESTING = True
     CSRF_ENABLED = False
     WTF_CSRF_ENABLED = False
 
     SQLALCHEMY_ECHO = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite://'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + TEST_DB

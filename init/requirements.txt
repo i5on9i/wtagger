@@ -3,12 +3,14 @@ appdirs==1.4.4
 attrs==20.1.0
 black==19.10b0
 click==7.1.2
+coverage==5.2.1
 Flask==1.1.2
-Flask-RESTful==0.3.8   
+Flask-RESTful==0.3.8
 Flask-SQLAlchemy==2.4.4
 itsdangerous==1.1.0
 Jinja2==2.11.2
 MarkupSafe==1.1.1
+nose2==0.9.2
 pathspec==0.8.0
 pytz==2020.1
 regex==2020.7.14
