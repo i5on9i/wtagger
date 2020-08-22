@@ -16,18 +16,18 @@ class BaseConfig(object):
     DEBUG = False
     TESTING = False
 
-    ADMINS = ['youremail@yourdomain.com']
+    ADMINS = ["youremail@yourdomain.com"]
 
     # http://flask.pocoo.org/docs/quickstart/#sessions
-    SECRET_KEY = 'secret key'
+    SECRET_KEY = "secret key"
 
-    LOG_FOLDER = os.path.join(INSTANCE_FOLDER_PATH, 'logs')
+    LOG_FOLDER = os.path.join(INSTANCE_FOLDER_PATH, "logs")
 
     # Fild upload, should override in production.
     # Limited the maximum allowed payload to 16 megabytes.
     # http://flask.pocoo.org/docs/patterns/fileuploads/#improving-uploads
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    UPLOAD_FOLDER = os.path.join(INSTANCE_FOLDER_PATH, 'uploads')
+    UPLOAD_FOLDER = os.path.join(INSTANCE_FOLDER_PATH, "uploads")
 
 
 class DefaultConfig(BaseConfig):
@@ -48,17 +48,20 @@ class DefaultConfig(BaseConfig):
     # disabled by default in the future.
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     # SQLITE for prototyping.
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + INSTANCE_FOLDER_PATH + '/db.sqlite'
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + INSTANCE_FOLDER_PATH + "/db.sqlite"
     # MYSQL for production.
-    #SQLALCHEMY_DATABASE_URI = 'mysql://username:password@server/db?charset=utf8'
+    # SQLALCHEMY_DATABASE_URI = 'mysql://username:password@server/db?charset=utf8'
 
 
 class TestConfig(BaseConfig):
-    TEST_DB = 'test.db'
+    TEST_DB = "test.db"
 
     TESTING = True
     CSRF_ENABLED = False
     WTF_CSRF_ENABLED = False
 
     SQLALCHEMY_ECHO = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + TEST_DB
+
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(
+        os.path.dirname(__file__), "tests", TEST_DB
+    )
