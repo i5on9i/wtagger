@@ -31,11 +31,21 @@ class TestApi(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_companyNameCandi(self):
+    def test_companyNameCandiWithLang(self):
         # insert test data
         self.app.post(
             "/api/add-company",
             data={"company_name_ko": "teste"},
+            follow_redirects=True,
+        )
+        self.app.post(
+            "/api/add-company",
+            data={"company_name_ja": "jejej023"},
+            follow_redirects=True,
+        )
+        self.app.post(
+            "/api/add-company",
+            data={"company_name_en": "engcomp"},
             follow_redirects=True,
         )
         self.app.post(
@@ -48,13 +58,41 @@ class TestApi(unittest.TestCase):
             follow_redirects=True,
         )
 
+        # wrong language
         response = self.app.get(
-            "/api/company-name-candi?company_name=tes", follow_redirects=True
+            "/api/kr/company-name-candi?company_name=tes", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(0, len(jdata["result"]), "wrong language character")
+        self.assertListEqual(sorted([]), sorted(jdata["result"]))
+
+        # ko
+        response = self.app.get(
+            "/api/ko/company-name-candi?company_name=tes", follow_redirects=True
         )
         jdata = json.loads(response.data)
         self.assertEqual(200, response.status_code)
         self.assertEqual(2, len(jdata["result"]))
         self.assertListEqual(sorted(["teste", "kr-teste"]), sorted(jdata["result"]))
+
+        # ja
+        response = self.app.get(
+            "/api/ja/company-name-candi?company_name=023", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(2, len(jdata["result"]))
+        self.assertListEqual(sorted(["jejej023", "02343"]), sorted(jdata["result"]))
+
+        # default en
+        response = self.app.get(
+            "/api/company-name-candi?company_name=mp", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(jdata["result"]), "default language")
+        self.assertListEqual(sorted(["engcomp"]), sorted(jdata["result"]))
 
     def test_companyNameByTag(self):
         # insert test data
@@ -71,7 +109,7 @@ class TestApi(unittest.TestCase):
             "/api/add-company",
             data={
                 "company_name_ja": "1111",
-                "company_name_ko": "krteste",
+                "company_name_ko": "dkfjlwes",
                 "company_tag_ko": "ta소|나나",
             },
             follow_redirects=True,
@@ -81,13 +119,33 @@ class TestApi(unittest.TestCase):
             data={
                 "company_name_ja": "1111",
                 "company_name_ko": "krteste",
-                "company_tag_ko": "ta소|나나",
-                "company_tag_ko": "jtag11|jtag1",
+                "company_tag_ko": "ta소|나나2|sdfsd",
+                "company_tag_ja": "jtag11|jtag1",
+            },
+            follow_redirects=True,
+        )
+        self.app.post(
+            "/api/add-company",
+            data={
+                "company_name_en": "ebebee",
+                "company_tag_en": "en4",
+                "company_tag_ja": "jtag1|jtag2",
             },
             follow_redirects=True,
         )
 
-        # not match case
+        # not match case - wrong language
+        fitem = "ta"
+        lang = "kk"
+        response = self.app.get(
+            f"/api/{lang}/company-name-by-tag?tag={fitem}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(0, len(jdata["result"]))
+        self.assertListEqual(sorted([]), sorted(jdata["result"]))
+
+        # no matching tag case
         fitem = "ta"
         response = self.app.get(
             f"/api/company-name-by-tag?tag={fitem}", follow_redirects=True
@@ -97,15 +155,45 @@ class TestApi(unittest.TestCase):
         self.assertEqual(0, len(jdata["result"]))
         self.assertListEqual(sorted([]), sorted(jdata["result"]))
 
-        # match case
+        # match case - default en with empty name
         fitem = "jtag1"
         response = self.app.get(
             f"/api/company-name-by-tag?tag={fitem}", follow_redirects=True
         )
         jdata = json.loads(response.data)
         self.assertEqual(200, response.status_code)
-        self.assertEqual(2, len(jdata["result"]))
-        self.assertListEqual(sorted(["jpteste", "krteste"]), sorted(jdata["result"]))
+        self.assertEqual(1, len(jdata["result"]), "en language")
+        self.assertListEqual(sorted(["ebebee"]), sorted(jdata["result"]))
+
+        # match case
+        fitem = "jtag1"
+        response = self.app.get(
+            f"/api/en/company-name-by-tag?tag={fitem}", follow_redirects=True
+        )
+        jdata2 = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(len(jdata["result"]), len(jdata2["result"]))
+        self.assertListEqual(sorted(jdata["result"]), sorted(jdata2["result"]))
+
+        # ko
+        fitem = "ta소"
+        response = self.app.get(
+            f"/api/ko/company-name-by-tag?tag={fitem}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(2, len(jdata["result"]), "ko language")
+        self.assertListEqual(sorted(["dkfjlwes", "krteste"]), sorted(jdata["result"]))
+
+        # ja, only matching full keyword
+        fitem = "jtag11"
+        response = self.app.get(
+            f"/api/ja/company-name-by-tag?tag={fitem}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(jdata["result"]), "ja language")
+        self.assertListEqual(sorted(["1111"]), sorted(jdata["result"]))
 
     def test_addCompanyTag(self):
 
@@ -152,7 +240,7 @@ class TestApi(unittest.TestCase):
         )
 
         response = self.app.get(
-            f"/api/company-name-by-tag?tag={newtag}", follow_redirects=True
+            f"/api/ko/company-name-by-tag?tag={newtag}", follow_redirects=True
         )
         jdata = json.loads(response.data)
         self.assertEqual(200, response.status_code)

@@ -2,7 +2,7 @@
 
 from typing import List
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, g, jsonify, request
 
 # from flask_login import login_user, current_user, logout_user
 from flask_restful import Api, Resource, reqparse
@@ -18,10 +18,13 @@ api_wrap = Api(api)
 
 
 class CompanyNameCandi(Resource):
-    #  curl http://127.0.0.1:5000/api/company-name-candi?company_name=round
+    #  curl http://127.0.0.1:5000/api/<lang>/company-name-candi?company_name=round
     def get(self):
-        (companyNameSeg) = self._getArguments()
-        candies = Company.searchByName(companyNameSeg)
+
+        curlang = g.get("current_lang", "en")
+
+        companyNameSeg = self._getArguments()
+        candies = Company.searchByName(companyNameSeg, curlang)
 
         return jsonify(result=candies)
 
@@ -30,18 +33,24 @@ class CompanyNameCandi(Resource):
         parser.add_argument(
             "company_name", help="company_name is needed", type=str, required=True,
         )
+        # parser.add_argument(
+        #     "lang", help="language should be selected", type=str, required=True,
+        # )
         args = parser.parse_args()
         return args["company_name"]
 
 
-api_wrap.add_resource(CompanyNameCandi, "/company-name-candi")
+api_wrap.add_resource(
+    CompanyNameCandi, "/company-name-candi", "/<lang>/company-name-candi"
+)
 
 
 class CompanyNameByTag(Resource):
     #  curl http://127.0.0.1:5000/api/company-name-by-tag?tag=round
     def get(self):
+        curlang = g.get("current_lang", "en")
         tag = self._getArguments()
-        candies = Company.searchByTag(tag)
+        candies = Company.searchByTag(tag, curlang)
 
         return jsonify(result=candies)
 
@@ -54,7 +63,9 @@ class CompanyNameByTag(Resource):
         return args["tag"]
 
 
-api_wrap.add_resource(CompanyNameByTag, "/company-name-by-tag")
+api_wrap.add_resource(
+    CompanyNameByTag, "/company-name-by-tag", "/<lang>/company-name-by-tag"
+)
 
 
 class AddCompanyTag(Resource):

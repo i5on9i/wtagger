@@ -29,22 +29,31 @@ class Company(db.Model):
         return "%s %s" % (self.first_name, self.last_name)
 
     @classmethod
-    def searchByName(cls, wantToFind):
+    def searchByName(cls, wantToFind, lang):
+        colCompanyName = f"company_name_{lang}"
+        if not hasattr(cls, colCompanyName):
+            return []
+
+        compNameCol = getattr(cls, colCompanyName)
         companies = (
-            cls.query.with_entities(cls.company_name_ko)
-            .filter(cls.company_name_ko.like(f"%{wantToFind}%"))
+            cls.query.with_entities(compNameCol)
+            .filter(compNameCol.like(f"%{wantToFind}%"))
             .all()
         )
         ret = []
         for com in companies:
-            ret.append(com.company_name_ko)
+            ret.append(getattr(com, colCompanyName))
         return ret
 
     @classmethod
-    def searchByTag(cls, wantToFind):
-        
+    def searchByTag(cls, wantToFind, lang):
+        colCompanyName = f"company_name_{lang}"
+        if not hasattr(cls, colCompanyName):
+            return []
+
+        compNameCol = getattr(cls, colCompanyName)
         companies = (
-            cls.query.with_entities(cls.company_name_ko)
+            cls.query.with_entities(compNameCol)
             .filter(
                 or_(
                     # delimiter = "|"
@@ -60,7 +69,9 @@ class Company(db.Model):
         )
         ret = []
         for com in companies:
-            ret.append(com.company_name_ko)
+            comName = getattr(com, colCompanyName)
+            if comName:
+                ret.append(comName)
         return ret
 
     def __repr__(self):

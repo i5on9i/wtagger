@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template
+from flask import Flask, g, render_template, request
 
 from wtagger.config import DefaultConfig
+from wtagger.extensions import db, migrate, babel
+from wtagger.filters import format_date, nl2br, pretty_date
+from wtagger.utils import INSTANCE_FOLDER_PATH
 
 # from user import User
 
-from wtagger.extensions import db, migrate
-from wtagger.filters import format_date, pretty_date, nl2br
-from wtagger.utils import INSTANCE_FOLDER_PATH
 
 
 # For import *
@@ -57,6 +57,7 @@ def configure_extensions(app):
     db.init_app(app)
     # flask-migrate
     migrate.init_app(app, db)
+    babel.init_app(app)
 
 
 def configure_blueprints(app):
@@ -127,8 +128,9 @@ def configure_logging(app):
 def configure_hook(app):
     @app.before_request
     def before_request():
-        pass
-
+        if request.view_args and "lang" in request.view_args:
+            g.current_lang = request.view_args["lang"]
+            request.view_args.pop("lang")
 
 # http://flask.pocoo.org/docs/latest/errorhandling/
 def configure_error_handlers(app):

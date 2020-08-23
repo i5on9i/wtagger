@@ -2,10 +2,12 @@ alembic==1.4.2
 aniso8601==8.0.0
 appdirs==1.4.4
 attrs==20.1.0
+Babel==2.8.0
 black==19.10b0
 click==7.1.2
 coverage==5.2.1
 Flask==1.1.2
+Flask-Babel==1.0.0
 Flask-Migrate==2.5.3
 Flask-RESTful==0.3.8
 Flask-SQLAlchemy==2.4.4

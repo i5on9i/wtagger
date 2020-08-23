@@ -29,6 +29,11 @@ class BaseConfig(object):
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     UPLOAD_FOLDER = os.path.join(INSTANCE_FOLDER_PATH, "uploads")
 
+    LANGUAGES = ['en', 'ja', 'ko']
+
+    BABEL_DEFAULT_LOCALE = 'ko'
+    BABEL_DEFAULT_TIMEZONE = 'Asia/Seoul'
+
 
 class DefaultConfig(BaseConfig):
 
