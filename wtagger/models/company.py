@@ -59,10 +59,13 @@ class Company(db.Model):
                     # delimiter = "|"
                     cls.company_tag_ko.like(f"%|{wantToFind}%"),
                     cls.company_tag_ko.like(f"%{wantToFind}|%"),
+                    cls.company_tag_ko.like(wantToFind),
                     cls.company_tag_ja.like(f"%|{wantToFind}%"),
                     cls.company_tag_ja.like(f"%{wantToFind}|%"),
+                    cls.company_tag_ja.like(wantToFind),
                     cls.company_tag_en.like(f"%|{wantToFind}%"),
                     cls.company_tag_en.like(f"%{wantToFind}|%"),
+                    cls.company_tag_en.like(wantToFind),
                 )
             )
             .all()
