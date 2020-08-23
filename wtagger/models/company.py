@@ -27,8 +27,11 @@ class Company(db.Model):
 
     @classmethod
     def searchByName(cls, wantToFind):
-        companies = cls.query.filter(cls.company_name_ko.like(f"%{wantToFind}%")).all()
-        return companies
+        companies = cls.query.with_entities(cls.company_name_ko).filter(cls.company_name_ko.like(f"%{wantToFind}%")).all()
+        ret = []
+        for com in companies:
+            ret.append(com.company_name_ko)
+        return ret
 
     def __repr__(self):
         return "<Company '%s'>" % self.company_name_ko

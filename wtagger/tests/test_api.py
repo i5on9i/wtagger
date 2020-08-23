@@ -33,7 +33,7 @@ class TestApi(unittest.TestCase):
 
         self.app.post(
             "/api/add-company",
-            data={"company_name_kr": "teste"},
+            data={"company_name_ko": "teste"},
             follow_redirects=True,
         )
         self.app.post(
@@ -52,10 +52,7 @@ class TestApi(unittest.TestCase):
         jdata = json.loads(response.data)
         self.assertEqual(200, response.status_code)
         self.assertEqual(2, len(jdata["result"]))
-        self.assertEqual(
-            json.dumps({"result": ["teste", "kr-teste"]}),
-            response.data.decode("utf8").strip(),
-        )
+        self.assertListEqual(sorted(["teste", "kr-teste"]), sorted(jdata["result"]))
 
     def test_addCompany(self):
 
