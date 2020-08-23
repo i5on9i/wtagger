@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from typing import List
+
 from flask import Blueprint, jsonify, request
 
 # from flask_login import login_user, current_user, logout_user
 from flask_restful import Api, Resource, reqparse
+
+from wtagger.extensions import db
+from wtagger.models.company import Company
 
 # from ..user import User
 
@@ -13,11 +18,12 @@ api_wrap = Api(api)
 
 
 class CompanyNameCandi(Resource):
-    #  curl http://127.0.0.1:5000/api/company-name-candi?type=round
+    #  curl http://127.0.0.1:5000/api/company-name-candi?company_name=round
     def get(self):
         (companyNameSeg) = self._getArguments()
+        candies = Company.searchByName(companyNameSeg)
 
-        return {"company_name_candidates": ['wanted', 'warned']}
+        return jsonify(result=candies)
 
     def _getArguments(self):
         parser = reqparse.RequestParser()
@@ -29,6 +35,43 @@ class CompanyNameCandi(Resource):
 
 
 api_wrap.add_resource(CompanyNameCandi, "/company-name-candi")
+
+
+class AddCompany(Resource):
+    # curl -X POST -d '{"company_name_ko":"소소", "company_tag_ko":"멋진|이렇게"}' http://127.0.0.1:5000/api/add-company
+    def post(self):
+        args = self._getArguments()
+        comp = Company(**args)
+        db.session.add(comp)
+        db.session.commit()
+
+        return {"result": "success"}
+
+    def _getArguments(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            "company_name_ko", type=str, required=False,
+        )
+        parser.add_argument(
+            "company_name_en", type=str, required=False,
+        )
+        parser.add_argument(
+            "company_name_ja", type=str, required=False,
+        )
+        parser.add_argument(
+            "company_tag_ko", type=str, required=False,
+        )
+        parser.add_argument(
+            "company_tag_en", type=str, required=False,
+        )
+        parser.add_argument(
+            "company_tag_ja", type=str, required=False,
+        )
+        args = parser.parse_args()
+        return args
+
+
+api_wrap.add_resource(AddCompany, "/add-company")
 
 
 @api.route("/login", methods=["POST"])
