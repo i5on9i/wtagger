@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+
+from sqlalchemy import or_
+
 from wtagger.extensions import db
 
 
@@ -27,7 +30,34 @@ class Company(db.Model):
 
     @classmethod
     def searchByName(cls, wantToFind):
-        companies = cls.query.with_entities(cls.company_name_ko).filter(cls.company_name_ko.like(f"%{wantToFind}%")).all()
+        companies = (
+            cls.query.with_entities(cls.company_name_ko)
+            .filter(cls.company_name_ko.like(f"%{wantToFind}%"))
+            .all()
+        )
+        ret = []
+        for com in companies:
+            ret.append(com.company_name_ko)
+        return ret
+
+    @classmethod
+    def searchByTag(cls, wantToFind):
+        
+        companies = (
+            cls.query.with_entities(cls.company_name_ko)
+            .filter(
+                or_(
+                    # delimiter = "|"
+                    cls.company_tag_ko.like(f"%|{wantToFind}%"),
+                    cls.company_tag_ko.like(f"%{wantToFind}|%"),
+                    cls.company_tag_ja.like(f"%|{wantToFind}%"),
+                    cls.company_tag_ja.like(f"%{wantToFind}|%"),
+                    cls.company_tag_en.like(f"%|{wantToFind}%"),
+                    cls.company_tag_en.like(f"%{wantToFind}|%"),
+                )
+            )
+            .all()
+        )
         ret = []
         for com in companies:
             ret.append(com.company_name_ko)

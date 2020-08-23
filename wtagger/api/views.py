@@ -37,6 +37,61 @@ class CompanyNameCandi(Resource):
 api_wrap.add_resource(CompanyNameCandi, "/company-name-candi")
 
 
+class CompanyNameByTag(Resource):
+    #  curl http://127.0.0.1:5000/api/company-name-by-tag?tag=round
+    def get(self):
+        tag = self._getArguments()
+        candies = Company.searchByTag(tag)
+
+        return jsonify(result=candies)
+
+    def _getArguments(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            "tag", help="tag is needed", type=str, required=True,
+        )
+        args = parser.parse_args()
+        return args["tag"]
+
+
+api_wrap.add_resource(CompanyNameByTag, "/company-name-by-tag")
+
+
+class AddCompanyTag(Resource):
+    # curl -X POST -d '{"id": 1, "tags":["마이태그1,마이태2"]} http://127.0.0.1:5000/api/add-company-tag
+    def patch(self):
+        args = self._getArguments()
+        comp = Company.query.get(args["id"])
+        if not comp:
+            return jsonify(result="fail", message="wrong company id")
+
+        if comp.company_tag_ko is None:
+            comp.company_tag_ko = ""
+
+        if comp.company_tag_ko:
+            # not (None or '')
+            comp.company_tag_ko += "|"
+        comp.company_tag_ko += f"{'|'.join(args['tags'])}"
+
+        db.session.add(comp)
+        db.session.commit()
+
+        return {"result": "success"}
+
+    def _getArguments(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            "id", type=int, required=True,
+        )
+        parser.add_argument("tags", required=True, action="append")
+
+        args = parser.parse_args()
+        return args
+
+
+api_wrap.add_resource(AddCompanyTag, "/add-company-tag")
+
+
 class AddCompany(Resource):
     # curl -X POST -d '{"company_name_ko":"소소", "company_tag_ko":"멋진|이렇게"}' http://127.0.0.1:5000/api/add-company
     def post(self):
