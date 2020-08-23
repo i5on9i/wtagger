@@ -222,14 +222,67 @@ class TestApi(unittest.TestCase):
             data={
                 "company_name_ja": "102343",
                 "company_name_ko": "j2pteste",
+                "company_name_en": "engname",
                 "company_tag_ko": "jtag21|jtag22",
             },
             follow_redirects=True,
         )
+        # add a row
+        self.app.post(
+            "/api/add-company",
+            data={"company_name_en": "en12343", "company_name_ko": "jpteste1",},
+            follow_redirects=True,
+        )
 
+        # ------------------------
+        # no company_name_en
         newtag = "마이태그3"
         response = self.app.patch(
             "/api/add-company-tag",
+            data={"id": 1, "tags": ["newtag1", newtag]},
+            follow_redirects=True,
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertDictEqual(
+            {"result": "success",}, jdata,
+        )
+
+        response = self.app.get(
+            f"/api/company-name-by-tag?tag={newtag}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(0, len(jdata["result"]))
+        self.assertListEqual(sorted([]), sorted(jdata["result"]))
+
+        # ------------------------
+        # add en tag
+        newtag = "마이태그3"
+        response = self.app.patch(
+            "/api/add-company-tag",
+            data={"id": 2, "tags": ["newtag1", newtag]},
+            follow_redirects=True,
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertDictEqual(
+            {"result": "success",}, jdata,
+        )
+
+        response = self.app.get(
+            f"/api/company-name-by-tag?tag={newtag}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(jdata["result"]))
+        self.assertListEqual(sorted(["engname"]), sorted(jdata["result"]))
+
+        # ------------------------
+        # add en tag
+        newtag = "마이태그4"
+        response = self.app.patch(
+            "/api/ko/add-company-tag",
             data={"id": 1, "tags": ["newtag1", newtag]},
             follow_redirects=True,
         )
@@ -246,6 +299,31 @@ class TestApi(unittest.TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(jdata["result"]))
         self.assertListEqual(sorted(["jpteste"]), sorted(jdata["result"]))
+
+        # ------------------------
+        # en tag with solo tag
+        newtag = "mytag5"
+        response = self.app.patch(
+            "/api/en/add-company-tag",
+            data={"id": 3, "tags": [newtag]},
+            follow_redirects=True,
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertDictEqual(
+            {"result": "success",}, jdata,
+        )
+
+        response = self.app.get(
+            f"/api/en/company-name-by-tag?tag={newtag}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(jdata["result"]))
+        self.assertListEqual(sorted(["en12343"]), sorted(jdata["result"]))
+
+        # ------------------------
+        # duplicated tag
 
     def test_addCompany(self):
 

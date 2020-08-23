@@ -69,20 +69,28 @@ api_wrap.add_resource(
 
 
 class AddCompanyTag(Resource):
-    # curl -X POST -d '{"id": 1, "tags":["마이태그1,마이태2"]} http://127.0.0.1:5000/api/add-company-tag
+    # curl -X POST -d '{"id": 1, "tags":["마이태그1","마이태2"]} http://127.0.0.1:5000/api/add-company-tag
     def patch(self):
+        curlang = g.get("current_lang", "en")
+
         args = self._getArguments()
         comp = Company.query.get(args["id"])
         if not comp:
             return jsonify(result="fail", message="wrong company id")
 
-        if comp.company_tag_ko is None:
-            comp.company_tag_ko = ""
+        tagCol = f"company_tag_{curlang}"
+        if not hasattr(comp, tagCol):
+            return jsonify(result="fail", message="wrong language")
 
-        if comp.company_tag_ko:
+        companyTag = getattr(comp, tagCol)
+        if companyTag is None:
+            companyTag = ""
+
+        if companyTag:
             # not (None or '')
-            comp.company_tag_ko += "|"
-        comp.company_tag_ko += f"{'|'.join(args['tags'])}"
+            companyTag += "|"
+        companyTag += f"{'|'.join(args['tags'])}"
+        setattr(comp, tagCol, companyTag)
 
         db.session.add(comp)
         db.session.commit()
@@ -100,7 +108,7 @@ class AddCompanyTag(Resource):
         return args
 
 
-api_wrap.add_resource(AddCompanyTag, "/add-company-tag")
+api_wrap.add_resource(AddCompanyTag, "/add-company-tag", "/<lang>/add-company-tag")
 
 
 class AddCompany(Resource):
