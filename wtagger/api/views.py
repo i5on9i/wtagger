@@ -69,8 +69,9 @@ api_wrap.add_resource(
 
 
 class AddCompanyTag(Resource):
-    # curl -X POST -d '{"id": 1, "tags":["마이태그1","마이태2"]} http://127.0.0.1:5000/api/add-company-tag
+    # curl -X PATCH -d '{"id": 1, "tags":["마이태그1","마이태2"]} http://127.0.0.1:5000/api/add-company-tag
     def patch(self):
+        DELIMITER = "|"
         curlang = g.get("current_lang", "en")
 
         args = self._getArguments()
@@ -83,14 +84,14 @@ class AddCompanyTag(Resource):
             return jsonify(result="fail", message="wrong language")
 
         companyTag = getattr(comp, tagCol)
-        if companyTag is None:
-            companyTag = ""
-
+        
         if companyTag:
-            # not (None or '')
-            companyTag += "|"
-        companyTag += f"{'|'.join(args['tags'])}"
-        setattr(comp, tagCol, companyTag)
+            # set is used to have unique tag
+            unionSet = set(companyTag.split(DELIMITER)) | set(args["tags"])
+        else:
+            unionSet = set(args["tags"])
+
+        setattr(comp, tagCol, '|'.join(unionSet))
 
         db.session.commit()
 
@@ -208,7 +209,7 @@ class CompanyTag(Resource):
             return jsonify(result="fail", message="wrong language")
 
         companyTag = getattr(comp, tagCol)
-        tags = companyTag.split('|') if companyTag else []
+        tags = companyTag.split("|") if companyTag else []
         return jsonify(result=tags)
 
     def _getArguments(self):
