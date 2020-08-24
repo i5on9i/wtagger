@@ -466,6 +466,31 @@ class TestApi(unittest.TestCase):
         )
         self.assertEqual(200, response.status_code)
 
+    def test_companyTag(self):
+        # add row
+        response = self.app.post(
+            "/api/add-company",
+            data={
+                "company_name_ja": "teste",
+                "company_name_ko": "kr-teste",
+                "company_tag_ja": "whatdet|dvsdet",
+                "company_tag_en": "en_whatdet|en_dvsdet",
+            },
+            follow_redirects=True,
+        )
+
+        response = self.app.get(
+            "/api/company-tag",
+            data={"id": 1},
+            follow_redirects=True,
+        )
+
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertDictEqual(
+            {"result": ["en_whatdet","en_dvsdet"]}, jdata,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

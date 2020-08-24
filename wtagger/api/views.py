@@ -3,6 +3,7 @@
 from typing import List
 
 from flask import Blueprint, current_app, g, jsonify, request
+
 # from flask_login import login_user, current_user, logout_user
 from flask_restful import Api, Resource, reqparse
 
@@ -191,6 +192,36 @@ class AddCompany(Resource):
 
 
 api_wrap.add_resource(AddCompany, "/add-company")
+
+
+class CompanyTag(Resource):
+    # curl -X GET http://127.0.0.1:5000/api/ko/company-tag?id=1
+    def get(self):
+        args = self._getArguments()
+        comp = Company.query.get(args["id"])
+        if not comp:
+            return jsonify(result="fail", message="wrong company id")
+
+        curlang = g.get("current_lang", "en")
+        tagCol = f"company_tag_{curlang}"
+        if not hasattr(comp, tagCol):
+            return jsonify(result="fail", message="wrong language")
+
+        companyTag = getattr(comp, tagCol)
+        tags = companyTag.split('|') if companyTag else []
+        return jsonify(result=tags)
+
+    def _getArguments(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            "id", type=int, required=True,
+        )
+
+        args = parser.parse_args()
+        return args
+
+
+api_wrap.add_resource(CompanyTag, "/company-tag", "/<lang>/company-tag")
 
 
 @api.route("/login", methods=["POST"])
