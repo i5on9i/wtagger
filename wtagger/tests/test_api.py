@@ -325,6 +325,122 @@ class TestApi(unittest.TestCase):
         # ------------------------
         # duplicated tag
 
+    def test_removeCompanyTag(self):
+
+        # add a row
+        extag = "마이태그"
+        self.app.post(
+            "/api/add-company",
+            data={
+                "company_name_ko": "원티드랩",
+                "company_name_en": "Wantedlab",
+                "company_tag_ko": "태그_4|태그_20|태그_16|마이태3",
+                "company_tag_en": f"tag_4|tag_20|tag_16|{extag}",
+                "company_tag_ja": "タグ_4|タグ_20|タグ_16",
+            },
+            follow_redirects=True,
+        )
+
+        # ------------------------
+        # non-existing tag
+        rmtag1 = "마이태그3"
+
+        response = self.app.patch(
+            "/api/remove-company-tag",
+            data={"id": 1, "tags": [rmtag1]},
+            follow_redirects=True,
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertDictEqual(
+            {"result": "success",}, jdata,
+        )
+
+        response = self.app.get(
+            f"/api/company-name-by-tag?tag={extag}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(jdata["result"]))
+        self.assertListEqual(sorted(["Wantedlab"]), sorted(jdata["result"]))
+
+        # ------------------------
+        # non-existing tag - wrong language
+        rmtag1 = "タグ_4"
+        response = self.app.patch(
+            "/api/remove-company-tag",
+            data={"id": 1, "tags": [rmtag1]},
+            follow_redirects=True,
+        )
+        response = self.app.get(
+            f"/api/company-name-by-tag?tag={rmtag1}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(jdata["result"]))
+        self.assertListEqual(sorted(["Wantedlab"]), sorted(jdata["result"]))
+
+        
+        # ------------------------
+        # wrong language
+        rmtag1 = "タグ_4"
+        response = self.app.patch(
+            "/api/jp/remove-company-tag",
+            data={"id": 1, "tags": [rmtag1]},
+            follow_redirects=True,
+        )
+        response = self.app.get(
+            f"/api/company-name-by-tag?tag={rmtag1}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(jdata["result"]))
+        self.assertListEqual(sorted(["Wantedlab"]), sorted(jdata["result"]))
+
+        # ------------------------
+        # remove a tag
+        rmtag1 = "タグ_4"
+        response = self.app.patch(
+            "/api/ja/remove-company-tag",
+            data={"id": 1, "tags": [rmtag1]},
+            follow_redirects=True,
+        )
+        response = self.app.get(
+            f"/api/company-name-by-tag?tag={rmtag1}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(0, len(jdata["result"]))
+        self.assertListEqual(sorted([]), sorted(jdata["result"]))
+        # restore
+        response = self.app.patch(
+            "/api/ja/add-company-tag",
+            data={"id": 1, "tags": [rmtag1]},
+            follow_redirects=True,
+        )
+
+        # ------------------------
+        # remove tags
+        rmtag1 = "タグ_4"
+        rmtag2 = "タグ_20"
+        response = self.app.patch(
+            "/api/ja/remove-company-tag",
+            data={"id": 1, "tags": [rmtag1, rmtag2]},
+            follow_redirects=True,
+        )
+        response = self.app.get(
+            f"/api/company-name-by-tag?tag={rmtag1}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(0, len(jdata["result"]))
+        response = self.app.get(
+            f"/api/company-name-by-tag?tag={rmtag2}", follow_redirects=True
+        )
+        jdata = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(0, len(jdata["result"]))
+        
     def test_addCompany(self):
 
         response = self.app.post(

@@ -2,8 +2,7 @@
 
 from typing import List
 
-from flask import Blueprint, g, jsonify, request
-
+from flask import Blueprint, current_app, g, jsonify, request
 # from flask_login import login_user, current_user, logout_user
 from flask_restful import Api, Resource, reqparse
 
@@ -92,7 +91,6 @@ class AddCompanyTag(Resource):
         companyTag += f"{'|'.join(args['tags'])}"
         setattr(comp, tagCol, companyTag)
 
-        db.session.add(comp)
         db.session.commit()
 
         return {"result": "success"}
@@ -109,6 +107,53 @@ class AddCompanyTag(Resource):
 
 
 api_wrap.add_resource(AddCompanyTag, "/add-company-tag", "/<lang>/add-company-tag")
+
+
+class RemoveCompanyTag(Resource):
+    # curl -X POST -d '{"id": 1, "tags":["마이태그1", "마이태그2"]} http://127.0.0.1:5000/api/ko/remove-company-tag
+    def patch(self):
+
+        args = self._getArguments()
+
+        curlang = g.get("current_lang", "en")
+        comp = Company.query.get(args["id"])
+
+        # validate
+        if not comp:
+            return jsonify(result="fail", message="wrong company id")
+
+        tagCol = f"company_tag_{curlang}"
+        if not hasattr(comp, tagCol):
+            return jsonify(result="fail", message="wrong language")
+
+        companyTag = getattr(comp, tagCol)
+        if not companyTag:
+            return jsonify(result="success", message="removed successfully")
+
+        # remove
+        existingTags = companyTag.split("|")
+        afterRemovedSet = set(existingTags) - set(args["tags"])
+
+        setattr(comp, tagCol, "|".join(afterRemovedSet))
+
+        db.session.commit()
+
+        return {"result": "success"}
+
+    def _getArguments(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            "id", type=int, required=True,
+        )
+        parser.add_argument("tags", required=True, action="append")
+
+        args = parser.parse_args()
+        return args
+
+
+api_wrap.add_resource(
+    RemoveCompanyTag, "/remove-company-tag", "/<lang>/remove-company-tag"
+)
 
 
 class AddCompany(Resource):
