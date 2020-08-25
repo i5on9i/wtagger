@@ -112,7 +112,7 @@ api_wrap.add_resource(AddCompanyTag, "/add-company-tag", "/<lang>/add-company-ta
 
 
 class RemoveCompanyTag(Resource):
-    # curl -X POST -d '{"id": 1, "tags":["마이태그1", "마이태그2"]} http://127.0.0.1:5000/api/ko/remove-company-tag
+    # curl -X PATCH -d '{"id": 1, "tags":["마이태그1", "마이태그2"]} http://127.0.0.1:5000/api/ko/remove-company-tag
     def patch(self):
 
         args = self._getArguments()
